@@ -1,0 +1,59 @@
+@startuml
+title Diagrama 3 - Publicaciones (UC 17-23)
+
+left to right direction
+skinparam shadowing false
+
+actor Usuario as U
+
+rectangle "Photos APP" {
+  usecase "Crear publicacion" as UC17
+  usecase "Adjuntar fotografia a una publicacion" as UC18
+  usecase "Editar publicacion" as UC19
+  usecase "Eliminar publicacion" as UC20
+  usecase "Consultar publicacion" as UC21
+  usecase "Consultar feed" as UC22
+  usecase "Consultar mis publicaciones" as UC23
+  usecase "Consultar publicaciones de otro usuario" as UC46
+}
+
+U -- UC17
+U -- UC18
+U -- UC19
+U -- UC20
+U -- UC21
+U -- UC22
+U -- UC23
+U -- UC46
+
+UC17 ..> UC18 : <<extend>>
+
+note top of UC46
+  Anadido en la revision 1.1: equivalente a
+  "Ver publicaciones de otros familiares".
+  Se muestra dentro de Ver perfil de otro
+  usuario (UC11, Diagrama 2), pero es un
+  objetivo de consulta propio, no un detalle
+  de la ficha de perfil.
+end note
+
+note top of UC17
+  Requiere al menos un texto o una fotografia.
+  Solo el autor puede editar o eliminar su publicacion.
+end note
+
+note right of UC18
+  Se detalla en el Diagrama 5.
+end note
+
+note bottom of UC21
+  Los comentarios y las reacciones son casos de uso
+  independientes (Diagrama 4), no partes obligatorias
+  de consultar la publicacion.
+end note
+
+note bottom of UC22
+  Feed = publicaciones propias + publicaciones
+  de los usuarios que el usuario sigue.
+end note
+@enduml

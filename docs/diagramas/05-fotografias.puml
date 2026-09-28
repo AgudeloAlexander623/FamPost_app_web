@@ -1,0 +1,53 @@
+@startuml
+title Diagrama 5 - Fotografias y contenido multimedia (UC 18, 31-36)
+
+left to right direction
+skinparam shadowing false
+
+actor Usuario as U
+
+rectangle "Photos APP" {
+  usecase "Adjuntar fotografia a una publicacion" as UC18
+  usecase "Subir fotografia" as UC31
+  usecase "Consultar fotografias propias" as UC32
+  usecase "Consultar fotografia" as UC33
+  usecase "Eliminar fotografia" as UC34
+  usecase "Desvincular fotografia de una publicacion" as UC35
+  usecase "Actualizar foto de perfil" as UC36
+}
+
+U -- UC18
+U -- UC31
+U -- UC32
+U -- UC33
+U -- UC34
+U -- UC35
+U -- UC36
+
+UC18 ..> UC31 : <<extend>>\n[la foto no esta en la galeria]
+
+note top of UC18
+  Mismo caso de uso que UC18 del Diagrama 3,
+  donde es "extend" de Crear publicacion.
+  Aqui se puede usar sobre una publicacion ya creada.
+end note
+
+note top of UC32
+  Galeria propia: origen de las fotos que
+  luego se adjuntan a publicaciones.
+end note
+
+note bottom of UC34
+  Solo el propietario. Si la foto esta asociada
+  a una publicacion, se elimina tambien la asociacion.
+end note
+
+note bottom of UC35
+  Deja la foto en la galeria, pero quita
+  la fotografia de la publicacion.
+end note
+
+note bottom of UC36
+  "extend" de Editar perfil (UC10, Diagrama 2).
+end note
+@enduml

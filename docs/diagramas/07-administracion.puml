@@ -1,0 +1,63 @@
+@startuml
+title Diagrama 7 - Administracion (UC 42-45)
+
+left to right direction
+skinparam shadowing false
+
+actor Usuario as U
+actor Administrador as AD
+AD --|> U : es un Usuario con permisos adicionales
+
+rectangle "Photos APP" {
+  usecase "Consultar usuarios" as UC42
+  usecase "Activar o desactivar cuenta de usuario" as UC43
+  usecase "Bloquear o desbloquear usuario" as UC44
+  usecase "Restablecer contrasena de usuario" as UC45
+}
+
+AD -- UC42
+AD -- UC43
+AD -- UC44
+AD -- UC45
+
+note top of UC42
+  Listado de cuentas registradas, necesario
+  porque el registro es abierto.
+end note
+
+note bottom of UC43
+  Desactivar impide iniciar sesion; activar
+  la vuelve a habilitar. No borra el contenido.
+end note
+
+note bottom of UC44
+  Impide ver publicaciones y comentar, pero
+  no elimina la cuenta ni impide iniciar
+  sesion. El bloqueo no se avisa al bloqueado.
+end note
+
+note bottom of UC45
+  Responde a Recuperar contrasena (UC06, Diagrama 1).
+  El Administrador comunica la nueva clave por
+  un canal externo; el sistema no envia correos.
+end note
+
+note as NROL
+  |Regla de seguridad|
+  --
+  El rol Administrador se asigna de forma manual
+  y jamas puede obtenerse mediante Registrarse
+  (UC01). Con el registro abierto, si no se
+  controla esto, cualquiera podria auto-asignarse
+  el rol.
+end note
+
+note as NEXCL
+  |Excluido a proposito|
+  --
+  Moderacion de contenido, gestion de contenido
+  reportado y gestion de permisos: en un circulo
+  familiar cerrado no son necesarios y anaden
+  casos de uso sin uso real.
+end note
+@enduml

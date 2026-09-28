@@ -1,0 +1,48 @@
+@startuml
+title Diagrama 4 - Interacciones (UC 24-30)
+
+left to right direction
+skinparam shadowing false
+
+actor Usuario as U
+
+rectangle "Photos APP" {
+  usecase "Comentar publicacion" as UC24
+  usecase "Editar comentario propio" as UC25
+  usecase "Eliminar comentario propio" as UC26
+  usecase "Reaccionar a publicacion" as UC27
+  usecase "Quitar reaccion" as UC28
+  usecase "Consultar comentarios" as UC29
+  usecase "Consultar reacciones" as UC30
+}
+
+U -- UC24
+U -- UC25
+U -- UC26
+U -- UC27
+U -- UC28
+U -- UC29
+U -- UC30
+
+note top of UC24
+  Solo se comenta en publicaciones de usuarios
+  a los que se sigue. El comentario no anida.
+end note
+
+note top of UC25
+  Solo el autor del comentario puede editarlo o borrarlo.
+end note
+
+note as N
+  La interaccion genera una notificacion al autor
+  de la publicacion (UC37, Diagrama 6).
+  No se dibuja ninguna relacion porque no es
+  "include": notificar es una reaccion del
+  sistema ante otro actor, no un subobjetivo
+  de comentar o de reaccionar.
+end note
+
+note bottom of UC30
+  Muestra quien ha reaccionado y con que reaccion.
+end note
+@enduml

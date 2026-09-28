@@ -1,0 +1,40 @@
+# Dependencias y artefactos de build
+node_modules/
+dist/
+build/
+target/
+.vite/
+
+# Entornos
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.db
+
+# Java / Maven
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: security-service
+
+  # Base de datos en memoria solo para desarrollo.
+  # Para MySQL/PostgreSQL cambiar url, driver, username y password.
+  datasource:
+    url: jdbc:h2:mem:securitydb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  security:
+    jwt:
+      # Sustituir por JWT_SECRET en produccion (minimo 32 caracteres)
+      secret: ${JWT_SECRET:clave-de-desarrollo-cambia-esto-en-produccion-1234567890}
+      expiration-minutes: 60
+    # Usuarios de ejemplo. En la practica se leen de la base de datos.
+    users:
+      admin:
+        password: admin123
+        roles:
+          - ADMIN
+          - USER
+      usuario:
+        password: usuario123
+        roles:
+          - USER
+
+logging:
+  level:
+    com.photosapp.security: DEBUG

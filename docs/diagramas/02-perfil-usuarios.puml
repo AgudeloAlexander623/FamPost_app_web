@@ -1,0 +1,53 @@
+@startuml
+title Diagrama 2 - Perfil y usuarios (UC 09-16)
+
+left to right direction
+skinparam shadowing false
+
+actor Usuario as U
+actor Administrador as AD
+AD --|> U : es un Usuario con permisos adicionales
+
+rectangle "Photos APP" {
+  usecase "Ver perfil propio" as UC09
+  usecase "Editar perfil" as UC10
+  usecase "Ver perfil de otro usuario" as UC11
+  usecase "Buscar usuarios" as UC12
+  usecase "Seguir usuario" as UC13
+  usecase "Dejar de seguir usuario" as UC14
+  usecase "Consultar conexiones" as UC15
+  usecase "Eliminar mi cuenta" as UC16
+}
+
+U -- UC09
+U -- UC10
+U -- UC11
+U -- UC12
+U -- UC13
+U -- UC14
+U -- UC15
+U -- UC16
+
+UC11 ..> UC13 : <<extend>>\n[el usuario no lo sigue todavia]
+
+note top of UC12
+  Solo devuelve miembros de la familia
+  ya registrados en la aplicacion.
+end note
+
+note bottom of UC10
+  Editar perfil "extend" Actualizar foto de perfil
+  (UC36, Diagrama 5).
+end note
+
+note bottom of UC15
+  Lista de usuarios que sigue y de usuarios
+  que le siguen a el.
+end note
+
+note bottom of UC16
+  Propuesta opcional: es un objetivo real del usuario.
+  Implica cerrar la sesion (UC03) y eliminar
+  el contenido propio.
+end note
+@enduml

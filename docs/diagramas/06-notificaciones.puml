@@ -1,0 +1,43 @@
+@startuml
+title Diagrama 6 - Notificaciones (UC 37-41)
+
+left to right direction
+skinparam shadowing false
+
+actor Usuario as U
+
+rectangle "Photos APP" {
+  usecase "Recibir notificacion" as UC37
+  usecase "Consultar notificaciones" as UC38
+  usecase "Marcar notificacion como leida" as UC39
+  usecase "Marcar todas las notificaciones como leidas" as UC40
+  usecase "Descartar notificacion" as UC41
+}
+
+U -- UC37
+U -- UC38
+U -- UC39
+U -- UC40
+U -- UC41
+
+UC38 ..> UC39 : <<extend>>\n[el usuario abre una notificacion]
+
+note top of UC37
+  El sistema genera la notificacion; el usuario
+  solo la recibe. No es una accion del usuario.
+  Se generan desde: comentar publicacion (UC24),
+  reaccionar (UC27) y recibir un seguidor nuevo.
+  Si el contenido desaparece, la notificacion
+  asociada tambien se elimina.
+end note
+
+note bottom of UC40
+  No es "include" de Marcar notificacion como leida:
+  seria un bucle sobre UC39, no un subobjetivo.
+end note
+
+note bottom of UC41
+  Propuesta opcional. La alternativa es que la
+  notificacion se borre sola al leerla.
+end note
+@enduml
