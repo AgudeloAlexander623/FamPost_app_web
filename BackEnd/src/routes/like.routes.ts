@@ -1,5 +1,10 @@
-import {Router} from 'express';
+import {Router} from "express";
+import {likeController} from " ./like.controller.ts"; 
 
-// creamos el middleware de autenticacion y las rutas para la implementacion de los likes
+const router = Router();
 
-import
+router.post('/:targetId/like', likeController.like);
+router.post('/:targetId/unlike', likeController.unlike);
+router.get('/:targetId/status', likeController.getStatus);
+
+export default router;
