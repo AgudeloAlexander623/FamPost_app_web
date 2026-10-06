@@ -1,0 +1,59 @@
+@startuml
+title Diagrama de secuencia 3 - Emitir invitacion (UC47)
+
+skinparam shadowing false
+autonumber
+
+actor Administrador as AD
+boundary "AdminPage\n(FrontEnd)" as UI
+control "AdminController\n(BackEnd)" as AC
+control "InvitacionService\n(BackEnd)" as IS
+database "PostgreSQL" as DB
+actor "Canal externo\n(WhatsApp, en persona)" as EXT
+
+activate UI
+AD -> UI : entra en administracion
+AD -> UI : pulsa "Emitir invitacion"
+UI -> AC : POST /api/admin/invitaciones
+activate AC
+AC -> IS : emitir()
+activate IS
+
+IS -> IS : genera un codigo unico
+IS -> IS : calcula la fecha de caducidad
+IS -> DB : guarda la invitacion
+activate DB
+DB --> IS : codigo creado
+deactivate DB
+IS --> AC : { codigo, fechaCaducidad }
+deactivate IS
+
+AC --> UI : 201 { codigo, fechaCaducidad }
+deactivate AC
+UI --> AD : muestra el codigo para comunicarlo
+deactivate UI
+
+AD -> EXT : comunica el codigo al familiar
+EXT --> AD : el familiar lo recibe
+
+note over AD, EXT
+  El aviso es EXTERNO y manual: el sistema no
+  envia correo ni mensaje. Por eso el Diagrama 6
+  de casos de uso deja claro que la invitacion no
+  genera notificacion, igual que el
+  restablecimiento de contrasena.
+end note
+
+note over IS
+  El codigo se caduca si no se usa. Si el
+  Administrador pierde el codigo, emite otro:
+  no hay forma de recuperar el anterior.
+end note
+
+note over AC
+  COMO ESTA HOY: no implementado. Se anade aqui
+  porque el registro por invitacion (UC01)
+  depende de este caso de uso: sin el, el alta
+  de usuarios no tendria entrada.
+end note
+@enduml

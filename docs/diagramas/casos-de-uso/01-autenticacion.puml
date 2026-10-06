@@ -32,10 +32,15 @@ UC07 ..> UC05 : <<extend>>
 
 note top of UC01
   Precondicion: no existe sesion activa.
-  Alta inmediata, sin invitacion ni aprobacion.
+  Precondicion: el usuario dispone de un codigo
+  de invitacion valido, emitido por el Administrador
+  (UC47, Diagrama 7). Sin el, el alta se rechaza.
   Regla: el nombre de usuario es unico.
   El rol Administrador NO se puede obtener
   desde este caso de uso.
+  Comprobar el codigo NO es un caso de uso: es un
+  paso interno de este mismo objetivo, sin actor ni
+  subgoal propios. Se documenta como precondicion.
 end note
 
 note top of UC07
@@ -50,8 +55,11 @@ note top of UC02
 end note
 
 note top of UC06
-  El usuario solicita el restablecimiento;
-  lo ejecuta el Administrador (UC45, Diagrama 7).
+  El usuario solicita el restablecimiento y el
+  sistema marca su cuenta como PENDIENTE DE
+  RESTABLECIMIENTO. La ejecuta despues el
+  Administrador en UC45 (Diagrama 7), que ve las
+  cuentas pendientes desde UC42.
 end note
 
 note as NACC

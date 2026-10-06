@@ -1,19 +1,27 @@
 # Diagramas de casos de uso - Photos APP
 
-Version 1.1 · Análisis de requisitos funcionales previo al modelo entidad-relación,
-arquitectura y clases.
+Version 1.3 · Análisis de requisitos funcional. Es el **primer** documento del
+modelo: de aquí salen los diagramas de clases, de secuencia, de comunicación y
+de despliegue, que están cada uno en su propio fichero.
 
-Diagramas en `docs/diagramas/*.puml` (PlantUML, 46 casos de uso numerados UC01–UC46).
+Diagramas en `docs/diagramas/casos-de-uso/` (PlantUML, 47 casos de uso numerados
+UC01–UC47). El resto de vistas del modelo están en
+[`clases.md`](clases.md), [`secuencia.md`](secuencia.md),
+[`comunicacion.md`](comunicacion.md) y [`despliegue.md`](despliegue.md).
+
+> v1.2: el registro pasa a ser **por invitación** y UC06 gana una postcondición real.
+> El registro abierto de la v1.0 daba un contradictorio con el requisito de aplicación
+> privada; la invitación lo resuelve con un solo caso de uso. Ver §4.
 
 ## Decisiones de negocio tomadas
 
 | # | Tema | Decisión |
 | - | ---- | -------- |
-| 1 | Acceso | **Registro abierto**: cualquiera se registra y usa la aplicación de inmediato, sin invitación ni aprobación |
+| 1 | Acceso | **Registro por invitación** (v1.2): nadie se da de alta por su cuenta, hace falta un código que emite el Administrador |
 | 2 | Administrador | **Administrador mínimo**: consultar usuarios, activar/desactivar cuentas, bloquear/desbloquear, restablecer contraseña. Sin moderación |
 | 3 | Relaciones | **Seguir unidireccional** (estilo Twitter). El feed muestra publicaciones propias + de los usuarios seguidos |
 | 4 | Fotografías | **Galería propia independiente** y además asociación de fotos a publicaciones |
-| 5 | Contraseña | **Restablecimiento por el Administrador**. Sin servicio de correo |
+| 5 | Contraseña | **Restablecimiento por el Administrador**. Sin servicio de correo. El usuario marca la cuenta como pendiente (UC06) |
 | 6 | Publicación | **Un solo caso de uso** "Crear publicación" con «extend» "Adjuntar fotografía" |
 
 ---
@@ -26,13 +34,19 @@ Diagramas en `docs/diagramas/*.puml` (PlantUML, 46 casos de uso numerados UC01�
 Cualquier miembro de la familia. Se asocia a los 44 casos de uso de los Diagramas 1–6.
 
 ### Administrador (actor secundario, justificado)
-Existe por una razón concreta: **el registro es abierto**, así que cualquiera puede crear
-una cuenta, y sin un actor con permisos ampliados nadie podría revertirlo. Un
-Administrador es además un Usuario (en el proyecto ya existe el rol `ADMIN` junto a
-`USER`), por eso se modela con **generalización de actor** `Administrador --|> Usuario`
-y no como un actor independiente. Así no hay que duplicar los 44 casos de uso del usuario.
+Existe por dos razones concretas:
 
-Casos de uso propios: UC42–UC45 (Diagrama 7).
+1. **Da de alta a la familia.** Es el único que emite invitaciones (UC47). Sin él, o
+   el registro es abierto y la aplicación deja de ser privada, o nadie controla quién
+   entra.
+2. **Resuelve lo que el usuario no puede.** Restablece contraseñas (UC45) y reactiva
+   cuentas desactivadas (UC43).
+
+Un Administrador es además un Usuario (en el proyecto ya existe el rol `ADMIN` junto a
+`USER`), por eso se modela con **generalización de actor** `Administrador --|> Usuario`
+y no como un actor independiente. Así no hay que duplicar los casos de uso del usuario.
+
+Casos de uso propios: UC42–UC45, UC47 (Diagrama 7).
 
 ### Servicio de autenticación (actor externo, justificado)
 Está justificado **porque en este proyecto ya existe como sistema aparte**
@@ -54,7 +68,7 @@ diagrama: no modelamos arquitectura, modelamos los sistemas que participan.
 
 ## 1.2 Casos de uso
 
-46 casos de uso, numerados y agrupados:
+47 casos de uso, numerados y agrupados:
 
 | Diagrama | Rango | Cantidad |
 | -------- | ----- | -------- |
@@ -64,7 +78,7 @@ diagrama: no modelamos arquitectura, modelamos los sistemas que participan.
 | 4 · Interacciones | UC24–UC30 | 7 |
 | 5 · Fotografías | UC18 (compartido), UC31–UC36 | 6 nuevos |
 | 6 · Notificaciones | UC37–UC41 | 5 |
-| 7 · Administración | UC42–UC45 | 4 |
+| 7 · Administración | UC42–UC45, UC47 | 5 |
 
 ## 1.3 Relaciones entre casos de uso
 
@@ -80,6 +94,7 @@ diagrama: no modelamos arquitectura, modelamos los sistemas que participan.
 | R8 | UC24 Comentar / UC27 Reaccionar → UC37 Recibir notificación | «trace» | Notificar es una **reacción del sistema ante otro actor**, no un subobjetivo de comentar o reaccionar. Relación informativa, no conductual |
 | R9 | UC10 Editar perfil → UC36 Actualizar foto de perfil | «extend» (Diagrama 2 → 5) | La foto de perfil es una parte opcional de la edición del perfil |
 | R10 | UC45 Restablecer contraseña (admin) → UC06 Recuperar contraseña (usuario) | «trace» | Responde a una solicitud de otro actor. No es «include»: lo ejecuta el Administrador, no el Usuario |
+| R11 | UC47 Emitir invitación → UC01 Registrarse | precondición (documentada como nota) | El registro exige un código válido. **No se modela como «include»**: comprobar un código es un paso interno del propio UC01, sin actor ni subobjetivo propios. La diferencia con R1 es que «Autenticar usuario» sí es el objetivo de un actor externo |
 
 ## 1.4 Casos de uso que usan «include»
 
@@ -178,10 +193,15 @@ UC07 ..> UC05 : <<extend>>
 
 note top of UC01
   Precondicion: no existe sesion activa.
-  Alta inmediata, sin invitacion ni aprobacion.
+  Precondicion: el usuario dispone de un codigo
+  de invitacion valido, emitido por el Administrador
+  (UC47, Diagrama 7). Sin el, el alta se rechaza.
   Regla: el nombre de usuario es unico.
   El rol Administrador NO se puede obtener
   desde este caso de uso.
+  Comprobar el codigo NO es un caso de uso: es un
+  paso interno de este mismo objetivo, sin actor ni
+  subgoal propios. Se documenta como precondicion.
 end note
 
 note top of UC07
@@ -196,8 +216,11 @@ note top of UC02
 end note
 
 note top of UC06
-  El usuario solicita el restablecimiento;
-  lo ejecuta el Administrador (UC45, Diagrama 7).
+  El usuario solicita el restablecimiento y el
+  sistema marca su cuenta como PENDIENTE DE
+  RESTABLECIMIENTO. La ejecuta despues el
+  Administrador en UC45 (Diagrama 7), que ve las
+  cuentas pendientes desde UC42.
 end note
 
 note as NACC
@@ -504,6 +527,10 @@ note top of UC37
   solo la recibe. No es una accion del usuario.
   Se generan desde: comentar publicacion (UC24),
   reaccionar (UC27) y recibir un seguidor nuevo.
+  No se notifica de la invitacion ni del
+  restablecimiento de contrasena: el
+  Administrador avisa por un canal externo
+  (UC45, UC47, Diagrama 7).
   Si el contenido desaparece, la notificacion
   asociada tambien se elimina.
 end note
@@ -530,7 +557,7 @@ end note
 
 ```plantuml
 @startuml
-title Diagrama 7 - Administracion (UC 42-45)
+title Diagrama 7 - Administracion (UC 42-45, 47)
 
 left to right direction
 skinparam shadowing false
@@ -544,16 +571,27 @@ rectangle "Photos APP" {
   usecase "Activar o desactivar cuenta de usuario" as UC43
   usecase "Bloquear o desbloquear usuario" as UC44
   usecase "Restablecer contrasena de usuario" as UC45
+  usecase "Emitir invitacion" as UC47
 }
 
 AD -- UC42
 AD -- UC43
 AD -- UC44
 AD -- UC45
+AD -- UC47
 
 note top of UC42
-  Listado de cuentas registradas, necesario
-  porque el registro es abierto.
+  Listado de cuentas con su estado, incluidas las
+  marcadas como PENDIENTE DE RESTABLECIMIENTO
+  por el caso UC06.
+end note
+
+note bottom of UC47
+  Crea el codigo que permite a un familiar
+  registrarse en UC01. El codigo se caduca si no
+  se usa y el Administrador lo comunica por un
+  canal externo. Es la unica forma de dar de alta
+  a alguien: por eso el registro es privado.
 end note
 
 note bottom of UC43
@@ -568,9 +606,11 @@ note bottom of UC44
 end note
 
 note bottom of UC45
-  Responde a Recuperar contrasena (UC06, Diagrama 1).
-  El Administrador comunica la nueva clave por
-  un canal externo; el sistema no envia correos.
+  Atiende las cuentas marcadas por UC06 o, si el
+  Administrador lo decide, restablece la contrasena
+  de cualquier usuario. La cuenta deja de estar
+  pendiente. El sistema no envia correos: la nueva
+  clave se comunica por un canal externo.
 end note
 
 note as NROL
@@ -578,9 +618,9 @@ note as NROL
   --
   El rol Administrador se asigna de forma manual
   y jamas puede obtenerse mediante Registrarse
-  (UC01). Con el registro abierto, si no se
-  controla esto, cualquiera podria auto-asignarse
-  el rol.
+  (UC01), que ademas exige una invitacion. Las dos
+  barreras juntas evitan que alguien de fuera
+  entre y se auto-asigne permisos.
 end note
 
 note as NEXCL
@@ -598,18 +638,15 @@ end note
 
 # 3. Riesgos y puntos que conviene revisar
 
-1. **"Red social privada" con registro abierto.** Es la incoherencia más importante:
-   el requisito dice red familiar privada, pero con registro abierto cualquiera que
-   conozca la URL se registra y ve el feed. Opciones: (a) dejarlo así y aceptar que la
-   privacidad la dan las invitaciones al círculo; (b) volver a la invitación, que
-   añade un solo caso de uso (`Validar código de invitación` como «include» de
-   UC01); (c) añadir después un caso de uso `Aprobar solicitud de registro`. Con 46
-   casos de uso ya, la opción (a) es defendible si se documenta como decisión consciente.
-2. **El `Security` actual no soporta el registro abierto.** En
-   `Security/src/main/resources/application.yml` los usuarios están fijos en el archivo
-   (`admin/admin123`, `usuario/usuario123`). Para que UC01 funcione, `Security` tiene
-   que leer las cuentas de la base de datos o recibir un alta. No es un cambio de
-   diagramas, es trabajo de implementación pendiente.
+1. ~~**"Red social privada" con registro abierto.**~~ **RESUELTO en la v1.2.** El
+   registro abierto contradecía el requisito de aplicación privada: cualquiera que
+   conociera la URL se daba de alta y veía el feed. Ahora hace falta un código de
+   invitación (UC47) emitido por el Administrador. Coste: un caso de uso.
+2. **El `Security` actual no soporta el registro por invitación.** Doble problema:
+   en `Security/src/main/resources/application.yml` los usuarios están fijos en el
+   archivo (`admin/admin123`, `usuario/usuario123`), así que ni las cuentas creadas
+   por la aplicación ni los códigos de invitación existen para él. Habrá que mover los
+   usuarios a la base de datos y propagar el alta y el estado de la cuenta.
 3. **Reacciones: ¿cuántos tipos?** Se modeló como una reacción por publicación sin
    especificar si hay varias (like, amor...). Si se decide admitir varias, habría que
    definir el cambio de una a otra, que hoy no está cubierto por ningún caso de uso.
@@ -641,6 +678,31 @@ end note
 | Delimitado "desactivar" frente a "bloquear" en el Diagrama 7 | Eran ambiguos: los dos parecen castigos y se confundían |
 | Sincronizado `casos-de-uso.md` con `diagramas/*.puml` | Los bloques de código se han regenerado desde los archivos, no se mantienen a mano |
 
+## v1.1 → v1.2 (resolución de ambigüedades 2 y 3)
+
+| Cambio | Motivo |
+| ------ | ------ |
+| **Registro abierto → por invitación.** Añadido **UC47 Emitir invitación** (Diagrama 7) y precondición en UC01 | El requisito dice "red social familiar privada". Con registro abierto cualquiera se daba de alta, así que el requisito era falso. Resuelto con un caso de uso y sin «include» nuevo |
+| **UC06 gana postcondición**: la cuenta queda en estado *pendiente de restablecimiento*, visible desde UC42 | Era un caso de uso sin resultado observable. El defecto no era el caso, era que no producía nada. **No se eliminó**: venía del enunciado y sin él un usuario que olvida su contraseña no tiene ninguna entrada al sistema |
+| UC45 redefinido: atiende las cuentas pendientes **o** actúa por iniciativa propia | El Administrador no estaba obligado a hacer nada. Ahora la solicitud es visible en UC42 |
+| Nueva relación **R11** (UC47 → UC01) documentada como precondición, no como «include» | Comprobar un código es un paso interno del propio UC01, sin actor ni subobjetivo propios |
+| Nota del Diagrama 6: los avisos de invitación y contraseña **no** generan notificación | Evita que un usuario espere una notificación que nunca llega, ya que el aviso es externo |
+| Nota de seguridad del Diagrama 7 ampliada | Invitación + asignación manual del rol son ahora dos barreras complementarias |
+| Actualizado el riesgo nº2 sobre `Security` | Con invitación el desfase es mayor: ni las cuentas ni los códigos existen para ese servicio |
+
+## v1.2 → v1.3 (reorganización de la documentación)
+
+Ninguna de las 47 definiciones de caso de uso ha cambiado. Solo se ha movido y
+documentado lo que rodea a los diagramas.
+
+| Cambio | Motivo |
+| ------ | ------ |
+| Los 7 `.puml` pasaron de `docs/diagramas/` a `docs/diagramas/casos-de-uso/` | Con cuatro tipos de diagrama más, tenerlos todos juntos en la misma carpeta obligaba a leer el nombre entero del fichero para saber de qué tipo era |
+| Añadidos `docs/clases.md`, `secuencia.md`, `comunicacion.md` y `despliegue.md` | Cada tipo de diagrama tiene su documento con la explicación y las tablas de cobertura |
+| Añadado `docs/diagramas/README.md` | Índice de los 25 diagramas, convenciones de nombres y cómo renderizar |
+| `sync-diagrams.ps1` sustituido por `docs/sync-diagramas.ps1` | El anterior llevaba la lista de ficheros escrita a mano y apuntaba a la ruta antigua. Ahora recorre las carpetas y empareja los bloques por posición |
+| El código de los diagramas **sigue incrustado** en este documento | Se mantiene la comodidad de leer el `.md` sin abrir el `.puml`, pero ahora es regenerable con un comando |
+
 ---
 
 # 5. Apendice: que hace cada caso de uso
@@ -649,12 +711,12 @@ Una linea por caso de uso, con un maximo de 200 caracteres.
 
 | UC | Nombre | Que hace |
 | -- | ------ | -------- |
-| UC01 | Registrarse | Crea una cuenta con nombre de usuario y contrasena. El acceso es inmediato: no hay invitacion ni aprobacion, y el rol de administrador nunca se concede aqui. |
+| UC01 | Registrarse | Crea la cuenta con nombre de usuario y contrasena. Exige un codigo de invitacion valido emitido por el Administrador, y el rol de administrador nunca se concede aqui. |
 | UC02 | Iniciar sesion | Valida las credenciales con el servicio de autenticacion y abre sesion. Solo es posible si la cuenta existe y esta activa; si falla, no se abre sesion. |
 | UC03 | Cerrar sesion | Termina la sesion actual y destruye su token. El usuario vuelve al estado sin sesion y ya no puede usar los casos de uso protegidos. |
 | UC04 | Consultar sesiones activas | Muestra los dispositivos y navegadores con sesion abierta del usuario, con fecha de inicio, para detectar accesos ajenos. |
 | UC05 | Cerrar todas las sesiones | Invalida el resto de sesiones abiertas menos la actual. Se usa tras un cambio de contrasena o ante la sospecha de un acceso no autorizado. |
-| UC06 | Recuperar contrasena | El usuario solicita que le restablezcan la contrasena. El sistema registra la peticion; la ejecuta despues el Administrador, que se la comunica por un canal externo. |
+| UC06 | Recuperar contrasena | El usuario pide que le restablezcan la contrasena y su cuenta queda marcada como pendiente. El Administrador lo ve al listar usuarios y lo resuelve. |
 | UC07 | Cambiar contrasena | El usuario sustituye su contrasena actual por otra nueva. Ademas puede cerrar el resto de sesiones abiertas como medida de seguridad. |
 | UC08 | Autenticar usuario | Lo ejecuta el servicio de autenticacion: comprueba las credenciales y emite el token de sesion. No es una accion del usuario. |
 | UC09 | Ver perfil propio | Muestra los datos del propio usuario: foto, nombre, biografia y numero de publicaciones. Es el punto de partida para editar el perfil. |
@@ -691,7 +753,8 @@ Una linea por caso de uso, con un maximo de 200 caracteres.
 | UC39 | Marcar notificacion como leida | El usuario marca como leida una notificacion concreta, ya sea desde la lista o al abrir el contenido relacionado. |
 | UC40 | Marcar todas como leidas | El usuario marca como leidas todas las notificaciones pendientes de un solo golpe, util tras volver de un tiempo sin mirar. |
 | UC41 | Descartar notificacion | El usuario elimina una notificacion de su lista sin abrirla, para ordenarla. Es opcional: la otra opcion es borrarla al leerla. |
-| UC42 | Consultar usuarios | El Administrador revisa la lista de cuentas registradas con su nombre y su estado. Es necesario porque el registro es abierto. |
+| UC42 | Consultar usuarios | El Administrador revisa la lista de cuentas con su nombre y estado, incluidas las pendientes de restablecimiento. Le permite saber a quien atender. |
 | UC43 | Activar o desactivar cuenta | El Administrador suspende una cuenta para que no pueda iniciar sesion, o la reactiva. No borra el contenido ya publicado. |
 | UC44 | Bloquear o desbloquear usuario | El Administrador impide que un usuario vea y comente el contenido de otro, o revierte el bloqueo. La cuenta sigue activa. |
-| UC45 | Restablecer contrasena de usuario | El Administrador genera una contrasena temporal para quien perdio la suya y se la comunica por un canal externo, ya que no hay correo. |
+| UC45 | Restablecer contrasena de usuario | El Administrador genera una clave nueva para una cuenta pendiente o para quien el decida, y la levanta del estado pendiente. Se la comunica en persona. |
+| UC47 | Emitir invitacion | El Administrador genera el codigo con el que un familiar podra registrarse y se lo comunica. Sin una invitacion activa nadie puede darse de alta. |

@@ -27,6 +27,10 @@ note top of UC37
   solo la recibe. No es una accion del usuario.
   Se generan desde: comentar publicacion (UC24),
   reaccionar (UC27) y recibir un seguidor nuevo.
+  No se notifica de la invitacion ni del
+  restablecimiento de contrasena: el
+  Administrador avisa por un canal externo
+  (UC45, UC47, Diagrama 7).
   Si el contenido desaparece, la notificacion
   asociada tambien se elimina.
 end note

@@ -1,0 +1,67 @@
+@startuml
+title Diagrama de despliegue 1 - Entorno de desarrollo (como esta hoy)
+
+skinparam shadowing false
+hide circle
+
+node "Windows 11" as WIN {
+  node "Navegador" as NAV
+}
+
+node "WSL2 (Ubuntu)" as WSL {
+  node "FrontEnd\nReact 19 + TypeScript\nVite dev server :5173" as FE
+
+  node "BackEnd\nNode 24 + Express\n:4000" as BE
+
+  node "Security\nJava 21 + Spring Boot\n:8080" as BE_SEC
+
+  node "MicroServicios\nPython 3 + FastAPI\n:8000" as MS
+
+  database "PostgreSQL 18\nbase photos_app\n:5432" as DB
+}
+
+NAV --> FE : HTTP :5173\n(el proxy de Vite\nreescribe /api hacia :4000)
+
+BE --> DB : SQL\n(TypeORM, puerto 5432)
+BE --> MS : HTTP :8000
+BE --> BE_SEC : HTTP :8080\nPOST /api/auth/login
+
+note top of WSL
+  Los cuatro servicios y la base de datos
+  comparten la misma maquina: es lo que hace
+  comodo developing. En este diagrama se ven los
+  puertos reales, no los conceptuales.
+end note
+
+note right of NAV
+  En WSL2 el navegador de Windows alcanza los
+  puertos de Linux en localhost gracias al
+  reenvio de localhost de WSL. Por eso no hace
+  falta configurar CORS: el proxy de Vite ya
+  hace de intermediario.
+end note
+
+note bottom of DB
+  PostgreSQL se instalo sin sudo, con el socket
+  en ~/.pgsock en vez de /var/run/postgresql.
+  Por eso los atajos pg_start y pg_status de
+  ~/.bashrc son necesarios: ajustan el PATH y el
+  LD_LIBRARY_PATH a mano.
+end note
+
+note bottom of BE_SEC
+  Security valida contra los usuarios fijos de
+  application.yml. Todavia no lee de la base de
+  datos, que es lo que habria que cambiar para
+  dar de alta usuarios con invitacion.
+end note
+
+note as NALMACEN
+  |Lo que NO hay|
+  --
+  No hay nodo de almacen de archivos: el sistema
+  guarda la URL de cada fotografia, no el binario.
+  Por eso en este entorno no existe ninguna
+  carpeta de uploads que mantener.
+end note
+@enduml

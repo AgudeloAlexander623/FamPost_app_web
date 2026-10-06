@@ -1,0 +1,91 @@
+@startuml
+title Diagrama de secuencia 4 - Crear publicacion con fotografia (UC17, UC18, UC31)
+
+skinparam shadowing false
+autonumber
+
+actor Usuario as U
+boundary "PublicacionPage\n(FrontEnd)" as UI
+control "PublicacionController\n(BackEnd)" as PC
+control "FotografiaService\n(BackEnd)" as FS
+control "PublicacionService\n(BackEnd)" as PS
+database "PostgreSQL" as DB
+
+activate UI
+U -> UI : escribe el texto
+alt adjunta una foto que ya esta en su galeria
+  U -> UI : elige una fotografia de su galeria (UC32)
+else adjunta una foto nueva
+  U -> UI : selecciona un archivo
+  group UC31 - Subir fotografia
+    UI -> FS : POST /api/fotografias
+    activate FS
+    FS -> DB : guarda la url de la foto
+    activate DB
+    DB --> FS : fotografia creada
+    deactivate DB
+    FS --> UI : 201 fotografia
+    deactivate FS
+  end
+end
+
+U -> UI : pulsa "Publicar"
+UI -> PC : POST /api/publicaciones
+activate PC
+
+PC -> PS : crear(autor, texto, fotos)
+activate PS
+
+alt no hay texto ni ninguna foto
+  PS --> PC : la publicacion no tiene contenido
+  deactivate PS
+  PC --> UI : 400 "escribe algo o adjunta una foto"
+else hay texto o al menos una foto
+  PS -> DB : inserta la publicacion
+  activate DB
+  DB --> PS : publicacion creada
+  deactivate DB
+
+  loop por cada fotografia adjunta
+    group UC18 - Adjuntar fotografia a una publicacion
+      PS -> DB : crea el vinculo publicacion-fotografia
+    end
+  end
+
+  PS --> PC : 201 publicacion creada
+  deactivate PS
+  PC --> UI : 201 publicacion
+end
+deactivate PC
+UI --> U : "publicacion visible en el feed"
+deactivate UI
+
+note over U, DB
+  UC18 aparece dos veces en los casos de uso: como
+  «extend» de UC17 aqui, y con su propio detalle
+  en el Diagrama 5 para cuando se usa sobre una
+  publicacion ya creada. Es el mismo caso de uso,
+  no dos distintos.
+end note
+
+note over U, DB
+  Publicar NO genera notificacion. El Diagrama 6
+  solo foresee notificar comentarios, reacciones
+  y seguidores nuevos: las publicaciones nuevas
+  aparecen en el feed, que es su propio canal.
+end note
+
+note over FS, DB
+  La fotografia se guarda en la galeria del
+  propietario aunque luego se desvincule de la
+  publicacion (UC35). Eliminar la publicacion no
+  borra la foto.
+
+  COMO ESTA HOY: el alta de fotos ya funciona
+  (BackEnd -> PostgreSQL, tabla photos), pero la
+  publicacion todavia no. El microservicio de
+  fotos existe y esta levantandose, aunque el
+  BackEnd no lo llama: no aparece en este
+  diagrama porque ningun flujo lo usa todavia.
+end note
+@enduml

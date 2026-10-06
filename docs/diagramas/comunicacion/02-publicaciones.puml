@@ -1,0 +1,43 @@
+@startuml
+title Diagrama de comunicacion 2 - Crear publicacion con fotografia (UC17, UC18, UC31)
+
+left to right direction
+skinparam shadowing false
+hide circle
+
+object "Usuario" as U
+object "PublicacionPage\n(FrontEnd)" as UI
+object "PublicacionController\n(BackEnd)" as PC
+object "PublicacionService\n(BackEnd)" as PS
+object "FotografiaService\n(BackEnd)" as FS
+database "PostgreSQL" as DB
+
+U --> UI : 1. escribe el texto\n2. elige una foto o un archivo\n6. publica
+UI --> FS : 3. POST /api/fotografias\n(UC31, si la foto es nueva)
+FS --> DB : 4. guarda la url de la foto
+DB --> FS : 5. fotografia creada
+FS --> UI : 5b. 201 fotografia
+UI --> PC : 7. POST /api/publicaciones
+PC --> PS : 8. crear(autor, texto, fotos)
+PS --> DB : 9. inserta la publicacion\n10. crea el vinculo con la foto (UC18)
+DB --> PS : 11. publicacion creada
+PS --> PC : 12. 201 publicacion
+PC --> UI : 13. 201 publicacion
+UI --> U : 14. visible en el feed
+
+note bottom of PS
+  Si no hay texto ni ninguna foto, se para
+  en el paso 8 y se responde 400: la
+  publicacion no llega a crearse.
+end note
+
+note bottom of DB
+  La fotografia se guarda en la galeria del
+  propietario aunque luego se desvincule de
+  la publicacion (UC35). Borrar la
+  publicacion no borra la foto.
+
+  El microservicio de fotos no aparece: hoy
+  ningun flujo lo llama.
+end note
+@enduml

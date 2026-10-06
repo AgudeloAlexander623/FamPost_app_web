@@ -1,0 +1,93 @@
+@startuml
+title Diagrama de clases 4 - Notificaciones
+
+skinparam shadowing false
+hide circle
+
+class Usuario {
+  - id : UUID
+  - nombreUsuario : String
+  --
+  + recibir(notificacion : Notificacion) : void
+}
+
+class Publicacion {
+  - id : UUID
+  - fechaCreacion : Date
+}
+
+class Comentario {
+  - id : UUID
+  - texto : String
+}
+
+enum TipoNotificacion {
+  NUEVO_COMENTARIO
+  NUEVA_REACCION
+  NUEVO_SEGUIDOR
+}
+
+enum EstadoNotificacion {
+  NO_LEIDA
+  LEIDA
+  DESCARTADA
+}
+
+class Notificacion {
+  - id : UUID
+  - mensaje : String
+  - fecha : Date
+  - leidaEn : Date
+  --
+  + crear(destinatario : Usuario, tipo : TipoNotificacion) : Notificacion
+  + marcarComoLeida() : void
+  + marcarTodasComoLeidas() : void
+  + descartar() : void
+  + estado() : EstadoNotificacion
+}
+
+Usuario "1" -- "0..*" Notificacion : recibe
+Publicacion "0..1" -- "0..*" Notificacion : origen
+Comentario "0..1" -- "0..*" Notificacion : origen
+
+note right of Notificacion
+  UC37 recibir, UC38 consultar, UC39 marcar como
+  leida, UC40 marcar todas y UC41 descartar.
+
+  El estado no es un atributo: es el valor que
+  devuelve estado(). Se modela asi para que las
+  transiciones validas (no leida -> leida ->
+  descartada) queden en un solo sitio y no
+  repartidas en tres booleanos.
+end note
+
+note top of Notificacion
+  origen es opcional a proposito: una notificacion
+  de NUEVO_SEGUIDOR no apunta a ninguna
+  publicacion ni a ningun comentario.
+end note
+
+note bottom of Notificacion
+  Si el contenido desaparece (se borra la
+  publicacion o el comentario), la notificacion
+  asociada se elimina tambien, en vez de quedar
+  apuntando a algo inexistente.
+end note
+
+note bottom of TipoNotificacion
+  Solo tres tipos porque son los tres casos de
+  uso que generan notificacion. La invitacion y
+  el restablecimiento de contrasena NO generan
+  ninguna: el aviso lo da el Administrador por un
+  canal externo.
+end note
+
+note as NEXCL
+  |Excluido a proposito|
+  --
+  El envio de correo o push. En los casos de uso
+  el aviso es externo y el sistema no tiene
+  servicio de correo, asi que no hay aqui ninguna
+  clase que lo represente.
+end note
+@enduml

@@ -1,0 +1,97 @@
+@startuml
+title Diagrama de clases 3 - Interacciones: comentarios y reacciones
+
+skinparam shadowing false
+hide circle
+
+class Usuario {
+  - id : UUID
+  - nombreUsuario : String
+  - bloqueado : Boolean
+  --
+  + estaBloqueado() : boolean
+}
+
+class Publicacion {
+  - id : UUID
+  - texto : String
+  - fechaCreacion : Date
+  --
+  + perteneceA(autor : Usuario) : boolean
+}
+
+class Comentario {
+  - id : UUID
+  - texto : String
+  - fechaCreacion : Date
+  - fechaEdicion : Date
+  --
+  + crear(autor : Usuario, publicacion : Publicacion, texto : String) : Comentario
+  + editar(autor : Usuario, texto : String) : boolean
+  + eliminar(autor : Usuario) : boolean
+  + esDe(autor : Usuario) : boolean
+}
+
+enum TipoReaccion {
+  ME_GUSTA
+  CORAZON
+  RISTRA
+}
+
+class Reaccion {
+  - fecha : Date
+  --
+  + registrar(usuario : Usuario, publicacion : Publicacion, tipo : TipoReaccion) : Reaccion
+  + cambiarTipo(tipo : TipoReaccion) : void
+  + eliminar() : void
+  + esDe(usuario : Usuario) : boolean
+}
+
+Usuario "1" -- "0..*" Comentario : escribe
+Publicacion "1" -- "0..*" Comentario : recibe
+Usuario "1" -- "0..*" Reaccion : deja
+Publicacion "1" -- "0..*" Reaccion : recibe
+
+note right of Comentario
+  UC24 comentar, UC25 editar, UC26 eliminar y
+  UC29 consultar.
+
+  NO tiene atributo "respuestaA": el Diagrama 4
+  de casos de uso deja claro que el comentario no
+  anida. Anadirlo seria disenar algo que el
+  requisito no pide.
+end note
+
+note bottom of Comentario
+  Solo se comenta en publicaciones de usuarios a
+  los que se sigue, y el usuario no puede estar
+  bloqueado. Esa comprobacion se hace en el caso
+  de uso, no como metodo de la clase: depende de
+  una regla de negocio, no del estado del
+  comentario.
+end note
+
+note right of Reaccion
+  UC27 reaccionar, UC28 quitar y UC30 consultar.
+
+  La clase no tiene id propio: la identidad la
+  forma el par (usuario, publicacion). Ver la
+  nota de la relacion de abajo.
+end note
+
+note bottom of Reaccion
+  |Restriccion de unicidad|
+  --
+  Un usuario deja como mucho una reaccion en
+  cada publicacion. Por eso la clave es el par
+  usuario + publicacion y por eso "cambiar de
+  reaccion" (UC27) actualiza la fila existente
+  en vez de crear otra.
+end note
+
+note bottom of Publicacion
+  Si al eliminar la publicacion (UC20) se borran
+  en cascada sus comentarios y reacciones, y con
+  ellos las notificaciones asociadas (UC37).
+end note
+@enduml

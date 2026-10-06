@@ -1,0 +1,82 @@
+@startuml
+title Diagrama de secuencia 6 - Comentar una publicacion (UC24)
+
+skinparam shadowing false
+autonumber
+
+actor Usuario as U
+boundary "PublicacionPage\n(FrontEnd)" as UI
+control "ComentarioController\n(BackEnd)" as CC
+control "ComentarioService\n(BackEnd)" as CS
+control "NotificacionService\n(BackEnd)" as NS
+database "PostgreSQL" as DB
+
+activate UI
+U -> UI : escribe el comentario
+U -> UI : pulsa "Comentar"
+UI -> CC : POST /api/publicaciones/{id}/comentarios
+activate CC
+CC -> CS : crear(autor, publicacion, texto)
+activate CS
+
+CS -> DB : comprueba que el autor\nsigue al dueno de la publicacion
+activate DB
+DB --> CS : es seguida
+deactivate DB
+
+alt el autor esta bloqueado
+  CS --> CC : 403 usuario bloqueado
+  deactivate CS
+  CC --> UI : 403
+  deactivate CC
+  UI --> U : "no puedes comentar"
+else el autor no sigue al dueno
+  CS --> CC : 400 "solo puedes comentar a quien sigues"
+  deactivate CS
+  CC --> UI : 400
+  deactivate CC
+  UI --> U : "sigue a este familiar para comentar"
+else se puede comentar
+  CS -> DB : inserta el comentario
+  activate DB
+  DB --> CS : comentario creado
+  deactivate DB
+  CS --> CC : 201 comentario
+  deactivate CS
+  CC --> UI : 201 comentario
+  deactivate CC
+  UI --> U : "el comentario aparece en la lista"
+
+  CS -> NS : crear(dueno, NUEVO_COMENTARIO, comentario)
+  activate NS
+  NS -> DB : guarda la notificacion
+  activate DB
+  DB --> NS : notificacion creada
+  deactivate DB
+  NS --> UI : "el dueno la vera en su bandeja"
+  deactivate NS
+end
+deactivate UI
+
+note over CS, NS
+  La notificacion NO se dibuja como «include» en
+  los casos de uso, y aqui tampoco va con flecha
+  de retorno: es una reaccion del sistema ante
+  otro actor (el dueno), no un subobjetivo de
+  comentar. Se lanza despues, y aunque falle, el
+  comentario ya esta guardado.
+end note
+
+note over NS
+  Si el comentario se borra (UC26), la
+  notificacion asociada se borra con el: no
+  puede quedar apuntando a algo que ya no existe.
+end note
+
+note over CC
+  COMO ESTA HOY: no implementado. El BackEnd solo
+  tiene /health, /auth/login y /photos. Este
+  diagrama especifica el comportamiento que exigen
+  los casos de uso.
+end note
+@enduml

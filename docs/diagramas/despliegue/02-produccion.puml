@@ -1,0 +1,93 @@
+@startuml
+title Diagrama de despliegue 2 - Objetivo de produccion (NO implementado)
+
+skinparam shadowing false
+hide circle
+
+node "Cliente\nnavegador en Internet" as CLI
+
+node "Servidor de aplicacion" as SRV_APP {
+  node "Proxy inverso\n(Nginx)\nHTTPS :443" as PROXY
+
+  node "FrontEnd\nbuild estatico de Vite" as FE
+
+  node "BackEnd\nNode 24 + Express\n:4000" as BE
+
+  node "Security\nJava 21 + Spring Boot\n:8080" as BE_SEC
+
+  node "MicroServicios\nPython 3 + FastAPI\n:8000" as MS
+}
+
+node "Servidor de datos" as SRV_DB {
+  database "PostgreSQL 18\nbase photos_app\n:5432" as DB
+}
+
+CLI --> PROXY : HTTPS :443\n(unico puerto abierto\na Internet)
+
+PROXY --> FE : HTTP interno\n(sirve los archivos estaticos)
+PROXY --> BE : HTTP :4000\n(reenvia solo /api)
+BE --> MS : HTTP :8000
+BE --> BE_SEC : HTTP :8080
+BE --> DB : SQL :5432\n(red privada)
+
+note top of CLI
+  OBJETIVO, NO IMPLEMENTADO.
+
+  Este diagrama no describe lo que hay hoy, sino
+  como quedaria el sistema al publicarlo. Se
+  separa del diagrama 1 a proposito para que no
+  se confundan "lo que funciona" con "lo que se
+  pretende hacer".
+end note
+
+note right of PROXY
+  Todo el trafico entra por aqui. El proxy es el
+  unico punto abierto: el BackEnd, Security y
+  MicroServicios se quedan sin acceso desde
+  Internet.
+
+  Ahi es donde se terminan los problemas de CORS:
+  en desarrollo los resolvio el proxy de Vite,
+  pero ahi no es un servidor real.
+end note
+
+note bottom of FE
+  En produccion no hay servidor de desarrollo:
+  Vite compila los archivos y los sirve como
+  estaticos. Por eso desaparecen el puerto 5173
+  y el hot reload.
+end note
+
+note bottom of DB
+  Base de datos en otra maquina y con la
+  configuracion de la red privada. Sigue sin
+  exponerse al exterior.
+end note
+
+note bottom of BE_SEC
+  En produccion los usuarios dejan de estar en
+  application.yml y pasan a leerse de PostgreSQL.
+  Es el cambio que exige el registro por
+  invitacion (UC01 y UC47).
+end note
+
+note as NALMACEN
+  |PENDIENTE DE DECIDIR|
+  --
+  Donde se guardan los archivos de las
+  fotografias. Hoy se guarda la URL, asi que el
+  sistema depende de un servicio externo. Cuando
+  se decida (disco del servidor, o almacen de
+  objetos) habra que anadir aqui su nodo.
+end note
+
+note as NEXCL
+  |Excluido a proposito|
+  --
+  No se dibujan mas de una instancia de cada
+  servicio, ni balanceo, ni tolerancia a fallos.
+  El proyecto no tiene esa necesidad y anadirlo
+  solo haria el diagrama mas dificil de leer sin
+  aportar informacion.
+end note
+@enduml

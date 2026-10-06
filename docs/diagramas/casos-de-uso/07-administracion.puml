@@ -1,5 +1,5 @@
 @startuml
-title Diagrama 7 - Administracion (UC 42-45)
+title Diagrama 7 - Administracion (UC 42-45, 47)
 
 left to right direction
 skinparam shadowing false
@@ -13,16 +13,27 @@ rectangle "Photos APP" {
   usecase "Activar o desactivar cuenta de usuario" as UC43
   usecase "Bloquear o desbloquear usuario" as UC44
   usecase "Restablecer contrasena de usuario" as UC45
+  usecase "Emitir invitacion" as UC47
 }
 
 AD -- UC42
 AD -- UC43
 AD -- UC44
 AD -- UC45
+AD -- UC47
 
 note top of UC42
-  Listado de cuentas registradas, necesario
-  porque el registro es abierto.
+  Listado de cuentas con su estado, incluidas las
+  marcadas como PENDIENTE DE RESTABLECIMIENTO
+  por el caso UC06.
+end note
+
+note bottom of UC47
+  Crea el codigo que permite a un familiar
+  registrarse en UC01. El codigo se caduca si no
+  se usa y el Administrador lo comunica por un
+  canal externo. Es la unica forma de dar de alta
+  a alguien: por eso el registro es privado.
 end note
 
 note bottom of UC43
@@ -37,9 +48,11 @@ note bottom of UC44
 end note
 
 note bottom of UC45
-  Responde a Recuperar contrasena (UC06, Diagrama 1).
-  El Administrador comunica la nueva clave por
-  un canal externo; el sistema no envia correos.
+  Atiende las cuentas marcadas por UC06 o, si el
+  Administrador lo decide, restablece la contrasena
+  de cualquier usuario. La cuenta deja de estar
+  pendiente. El sistema no envia correos: la nueva
+  clave se comunica por un canal externo.
 end note
 
 note as NROL
@@ -47,9 +60,9 @@ note as NROL
   --
   El rol Administrador se asigna de forma manual
   y jamas puede obtenerse mediante Registrarse
-  (UC01). Con el registro abierto, si no se
-  controla esto, cualquiera podria auto-asignarse
-  el rol.
+  (UC01), que ademas exige una invitacion. Las dos
+  barreras juntas evitan que alguien de fuera
+  entre y se auto-asigne permisos.
 end note
 
 note as NEXCL

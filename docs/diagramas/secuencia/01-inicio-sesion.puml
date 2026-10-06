@@ -1,0 +1,73 @@
+@startuml
+title Diagrama de secuencia 1 - Iniciar sesion (UC02, con «include» UC08)
+
+skinparam shadowing false
+autonumber
+
+actor Usuario
+boundary "LoginPage\n(FrontEnd)" as UI
+control "AuthController\n(BackEnd)" as AC
+control "SecurityService\n(BackEnd)" as SS
+participant "Security\n(servicio Java)" as SEC
+
+activate UI
+Usuario -> UI : introduce usuario y contrasena
+UI -> AC : POST /api/auth/login
+activate AC
+AC -> SS : login(usuario, contrasena)
+activate SS
+
+group UC08 - Autenticar usuario
+  SS -> SEC : POST /api/auth/login
+  activate SEC
+  alt las credenciales son validas
+    SEC -> SEC : busca el usuario y compara la contrasena
+    SEC --> SS : 200 { token, username, roles }
+  else el usuario no existe o la clave no cuadra
+    SEC --> SS : 401 credenciales invalidas
+  else la cuenta esta desactivada o bloqueada
+    SEC --> SS : 403 cuenta no habilitada
+  end
+  deactivate SEC
+end
+
+alt la sesion se inicia
+  SS --> AC : token
+  deactivate SS
+  AC --> UI : 200 { token, username, roles }
+  deactivate AC
+  UI -> UI : guarda el token en localStorage
+  UI --> Usuario : muestra la pantalla principal
+else el acceso se rechaza
+  SS --> AC : error de autenticacion
+  deactivate SS
+  AC --> UI : 401 o 403
+  deactivate AC
+  UI --> Usuario : "Credenciales invalidas\no servicio no disponible"
+end
+deactivate UI
+
+note over SEC
+  UC08 es el unico «include» de todo el
+  modelo: se dibuja aparte porque autenticar
+  tambien es objetivo del servicio de
+  autenticacion, que actua por su cuenta al
+  atender peticiones de otros clientes.
+end note
+
+note over SEC
+  COMO ESTA HOY, NO COMO DEBERIA:
+  el servicio valida contra los usuarios fijos
+  de application.yml. Con el registro por
+  invitacion (UC01) tienen que pasar a leerse
+  de la base de datos.
+end note
+
+note over UI, AC
+  Ni la interfaz ni el BackEnd validan el token:
+  no hay ningun middleware que lo compruebe.
+  Por eso este diagrama termina al devolver el
+  token y no sigue hacia "Acceder al feed".
+  Ese es el punto pendiente del modulo.
+end note
+@enduml

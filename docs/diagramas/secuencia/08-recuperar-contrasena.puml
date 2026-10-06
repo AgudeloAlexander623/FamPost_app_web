@@ -1,0 +1,94 @@
+@startuml
+title Diagrama de secuencia 8 - Recuperar y restablecer la contrasena (UC06 y UC45)
+
+skinparam shadowing false
+autonumber
+
+actor Usuario as U
+actor Administrador as AD
+boundary "LoginPage\ny RecuperarPage" as UI
+control "AuthController\n(BackEnd)" as AC
+control "UsuarioService\n(BackEnd)" as US
+control "AdminController\n(BackEnd)" as ADC
+control "PasswordService\n(BackEnd)" as PS
+database "PostgreSQL" as DB
+actor "Canal externo\n(WhatsApp, en persona)" as EXT
+
+== FASE 1 - El usuario pide el restablecimiento ==
+
+activate UI
+U -> UI : pulsa "He olvidado mi contrasena"
+U -> UI : escribe su nombre de usuario
+UI -> AC : POST /api/auth/recuperar
+activate AC
+AC -> US : marcarPendienteRestablecimiento(usuario)
+activate US
+US -> DB : pone la cuenta en estado pendiente
+activate DB
+DB --> US : cuenta actualizada
+deactivate DB
+US --> AC : ok
+deactivate US
+AC --> UI : 200 "pide al Administrador"
+deactivate UI
+UI --> U : "tu cuenta queda a la espera"
+
+note over U, DB
+  El usuario NO recibe ninguna notificacion. El
+  Diagrama 6 de casos de uso lo deja explicito:
+  el aviso lo da el Administrador por un canal
+  externo. Por eso el unico mensaje de este
+  diagrama es el de la interfaz.
+end note
+
+== FASE 2 - El Administrador restablece la contrasena ==
+
+activate ADC
+AD -> ADC : entra en administracion
+AD -> ADC : consulta las cuentas pendientes (UC42)
+ADC -> DB : busca cuentas con estado pendiente
+activate DB
+DB --> ADC : listado de cuentas
+deactivate DB
+ADC --> AD : muestra la cuenta pendiente
+deactivate ADC
+
+AD -> AD : elige la cuenta
+activate PS
+AD -> PS : restablecer(usuario, nuevaClave)
+PS -> DB : guarda la contrasena cifrada
+activate DB
+DB --> PS : cuenta actualizada
+deactivate DB
+PS -> DB : la cuenta deja de estar pendiente
+deactivate DB
+PS --> EXT : ninguna llamada: no hay envio de correo
+deactivate PS
+
+AD -> EXT : comunica la nueva contrasena al usuario
+EXT --> AD : el usuario la recibe
+
+note over AD, EXT
+  Esta fase la ejecuta el Administrador, no el
+  sistema. No es un «include» de la fase 1: es
+  otro actor y otro caso de uso (UC45), en otro
+  diagrama. La dependencia entre ambos se
+  documenta como precondicion, no como relacion
+  «include».
+end note
+
+note over PS
+  La contrasena se guarda cifrada, nunca en
+  claro. El hash lo lleva el servicio de
+  autenticacion: el BackEnd no compara contrasenas,
+  se las pasa.
+end note
+
+note over AC
+  COMO ESTA HOY: no implementado. Ademas, Security
+  valida contra los usuarios fijos de
+  application.yml, asi que hasta que los usuarios
+  no vivan en PostgreSQL este flujo no puede
+  funcionar tal cual.
+end note
+@enduml

@@ -1,0 +1,56 @@
+@startuml
+title Diagrama de comunicacion 3 - Comentar y reaccionar (UC24 y UC27)
+
+left to right direction
+skinparam shadowing false
+hide circle
+
+object "Usuario" as U
+object "PublicacionPage\n(FrontEnd)" as UI
+object "ComentarioController\n(BackEnd)" as CC
+object "ComentarioService\n(BackEnd)" as CS
+object "ReaccionController\n(BackEnd)" as RC
+object "ReaccionService\n(BackEnd)" as RS
+object "NotificacionService\n(BackEnd)" as NS
+database "PostgreSQL" as DB
+
+U --> UI : 1. escribe el comentario\n6. elige una reaccion
+UI --> CC : 2. POST /api/publicaciones/{id}/comentarios
+CC --> CS : 3. crear(autor, publicacion, texto)
+CS --> DB : 4. comprueba que sigue al dueno\n4b. inserta el comentario
+CS --> NS : 5. crear(dueno, NUEVO_COMENTARIO)
+UI --> RC : 7. POST /api/publicaciones/{id}/reacciones
+RC --> RS : 8. registrar(usuario, publicacion, tipo)
+RS --> DB : 9. busca la reaccion de ese usuario\na esa publicacion
+RS --> DB : 10. inserta o actualiza la reaccion
+RS --> NS : 11. crear(dueno, NUEVA_REACCION)
+NS --> DB : 12. guarda la notificacion
+DB --> RC : 13. la reaccion aparece en la publicacion
+DB --> CC : 14. el comentario aparece en la lista
+
+note bottom of CS
+  Comentar y reaccionar son dos caminos
+  independientes que comparten tres cosas:
+  la misma pagina, la misma publicacion y el
+  mismo servicio de notificaciones. Se
+  dibujan juntos porque en un diagrama de
+  comunicacion lo que se ve es quien
+  collaborate con quien, no el orden.
+end note
+
+note bottom of NS
+  La notificacion se lanza DESPUES de
+  guardar, y aunque falle, el comentario o
+  la reaccion ya estan. Por eso no es un
+  «include»: no es un subobjetivo del caso
+  de uso, es una reaccion del sistema ante
+  otro actor.
+end note
+
+note bottom of RS
+  Un usuario deja una sola reaccion por
+  publicacion: si ya habia reaccionado, el
+  paso 10 actualiza el tipo en vez de crear
+  una fila nueva.
+end note
+@enduml

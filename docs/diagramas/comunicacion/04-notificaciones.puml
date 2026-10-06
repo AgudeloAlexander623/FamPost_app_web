@@ -1,0 +1,52 @@
+@startuml
+title Diagrama de comunicacion 4 - Notificaciones (UC37 y UC38)
+
+left to right direction
+skinparam shadowing false
+hide circle
+
+object "Usuario" as U
+object "ComentarioService\n(BackEnd)" as CS
+object "ReaccionService\n(BackEnd)" as RS
+object "NotificacionService\n(BackEnd)" as NS
+object "NotificacionController\n(BackEnd)" as NC
+object "BandejaPage\n(FrontEnd)" as UI
+database "PostgreSQL" as DB
+
+CS --> NS : 1. crear(duevo, NUEVO_COMENTARIO)
+RS --> NS : 2. crear(duevo, NUEVA_REACCION)
+NS --> DB : 3. guarda la notificacion
+U --> UI : 4. abre su bandeja
+UI --> NC : 5. GET /api/notificaciones
+NC --> NS : 6. listar(usuario)
+NS --> DB : 7. notificaciones del usuario\nordenadas por fecha desc
+DB --> NS : 8. listado
+NS --> NC : 9. notificaciones
+NC --> UI : 10. 200 listado
+UI --> U : 11. muestra las no leidas primero
+
+note bottom of NS
+  NotificacionService es el UNICO punto por
+  el que se crean notificaciones. Por eso es
+  el objeto mas conectado del diagrama: en
+  cuanto se anada otro motor (un seguidor
+  nuevo), entra aqui y no en otro sitio.
+end note
+
+note bottom of DB
+  Al borrar el comentario (UC26) o la
+  reaccion (UC29) se borra tambien su
+  notificacion: no puede quedar apuntando a
+  algo que ya no existe.
+end note
+
+note bottom of UI
+  Lo que NO aparece y por que:
+  - No hay correo ni push. El aviso es
+    dentro de la aplicacion.
+  - No hay confirmacion de lectura. El caso
+    de uso dice "ver" las notificaciones,
+    no "marcar como leidas": anadir ese
+    estado seria inventar una funcionalidad.
+end note
+@enduml

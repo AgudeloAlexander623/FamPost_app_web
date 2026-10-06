@@ -1,0 +1,35 @@
+@startuml
+title Diagrama de comunicacion 1 - Autenticacion (UC02 con «include» UC08)
+
+left to right direction
+skinparam shadowing false
+hide circle
+
+object "Usuario" as U
+object "LoginPage\n(FrontEnd)" as UI
+object "AuthController\n(BackEnd)" as AC
+object "SecurityService\n(BackEnd)" as SS
+object "Security\n(servicio Java)" as SEC
+
+U --> UI : 1. introduce usuario y contrasena\n9. muestra la pantalla principal
+UI --> AC : 2. login(usuario, contrasena)\n8. 200 { token, username, roles }
+AC --> SS : 3. login(usuario, contrasena)\n7. credenciales aceptadas
+SS --> SEC : 4. POST /api/auth/login\n6. { token, username, roles }
+SEC --> SS : 5. compara la contrasena
+
+note bottom of SS
+  El grupo 4 a 6 es el «include» UC08
+  Autenticar usuario: se numera aparte
+  porque tambien es objetivo del servicio
+  de autenticacion, que atiende a otros
+  clientes por su cuenta.
+end note
+
+note bottom of UI
+  El paso 9 guarda antes el token en
+  localStorage. Es un mensaje a si mismo y
+  por eso no se dibuja como flecha: en un
+  diagrama de comunicacion solo interesan
+  los enlaces entre objetos distintos.
+end note
+@enduml

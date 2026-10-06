@@ -1,0 +1,77 @@
+@startuml
+title Diagrama de secuencia 7 - Reaccionar a una publicacion (UC27)
+
+skinparam shadowing false
+autonumber
+
+actor Usuario as U
+boundary "PublicacionPage\n(FrontEnd)" as UI
+control "ReaccionController\n(BackEnd)" as RC
+control "ReaccionService\n(BackEnd)" as RS
+control "NotificacionService\n(BackEnd)" as NS
+database "PostgreSQL" as DB
+
+activate UI
+U -> UI : elige una reaccion\n(corazon, me gusta, risa)
+UI -> RC : POST /api/publicaciones/{id}/reacciones
+activate RC
+RC -> RS : registrar(usuario, publicacion, tipo)
+activate RS
+
+RS -> DB : busca la reaccion de ese usuario\na esa publicacion
+activate DB
+DB --> RS : reaccion existente o ninguna
+deactivate DB
+
+alt el usuario ya habia reaccionado
+  RS -> DB : actualiza el tipo de reaccion
+  deactivate DB
+  RS --> RC : 200 reaccion actualizada
+else es la primera reaccion
+  RS -> DB : inserta la reaccion
+  deactivate DB
+  RS --> RC : 201 reaccion creada
+end
+
+RC --> UI : la reaccion aparece en la publicacion
+deactivate RC
+
+alt es su propia publicacion
+  RS -> NS : no crear notificacion
+  note right of NS
+    Decision pendiente: los casos de uso no dicen
+    si uno recibe aviso de su propia reaccion.
+    Aqui se asume que no, porque el autor ya ve
+    su publicacion.
+  end note
+else es la publicacion de otro
+  RS -> NS : crear(dueno, NUEVA_REACCION, publicacion)
+  activate NS
+  NS -> DB : guarda la notificacion
+  activate DB
+  DB --> NS : notificacion creada
+  deactivate DB
+  NS --> UI : "el dueno la vera en su bandeja"
+  deactivate NS
+end
+deactivate RS
+deactivate UI
+
+note over RS, DB
+  Un usuario deja como mucho una reaccion por
+  publicacion. Por eso "cambiar de reaccion"
+  actualiza la fila existente en vez de crear
+  otra: si no, al elegir dos veces le aparecerian
+  dos reacciones al mismo usuario.
+end note
+
+note over U, DB
+  PENDIENTE DE DECIDIR: los casos de uso cubren
+  "reaccionar" y "quitar reaccion", pero NO
+  cubren cambiar de tipo. Se asume que la misma
+  accion sirve para cambiar, porque es lo que
+  hace la mayoria de las redes. Si prefieres que
+  el cambio sea un caso de uso aparte, habria que
+  anadirlo.
+end note
+@enduml

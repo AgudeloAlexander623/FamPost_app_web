@@ -1,0 +1,76 @@
+@startuml
+title Diagrama de secuencia 2 - Registrarse con invitacion (UC01)
+
+skinparam shadowing false
+autonumber
+
+actor "Nuevo familiar" as U
+boundary "RegisterPage\n(FrontEnd)" as UI
+control "RegistroController\n(BackEnd)" as RC
+control "InvitacionService\n(BackEnd)" as IS
+control "UsuarioService\n(BackEnd)" as US
+database "PostgreSQL" as DB
+
+activate UI
+U -> UI : abre el formulario de alta
+U -> UI : introduce usuario, nombre,\ncontrasena y codigo de invitacion
+UI -> RC : POST /api/registro
+activate RC
+RC -> IS : validarCodigo(codigo)
+activate IS
+IS -> DB : busca la invitacion por codigo
+activate DB
+DB --> IS : invitacion o ninguna
+deactivate DB
+
+alt el codigo no existe, ya se uso o esta caducado
+  IS --> RC : codigo no valido
+  deactivate IS
+  RC --> UI : 400 "invitacion no valida"
+  deactivate RC
+  UI --> U : "pide un codigo nuevo al Administrador"
+else el codigo es valido
+  IS --> RC : invitacion valida
+  deactivate IS
+  RC -> US : crear(usuario, rol USUARIO)
+  activate US
+  US -> DB : insertar el usuario
+  activate DB
+  DB --> US : usuario creado
+  deactivate DB
+  US -> DB : marcar la invitacion como usada
+  deactivate US
+  RC --> UI : 201 cuenta creada
+  deactivate RC
+  UI --> U : "cuenta creada, ya puedes entrar"
+end
+deactivate UI
+
+note over U, DB
+  NO se crea sesion al registrarse. El Diagrama 1
+  de casos de uso pone "no existe sesion activa"
+  como precondicion de UC01, asi que despues hay
+  que iniciar sesion por separado (UC02).
+end note
+
+note over U, DB
+  El rol se fija siempre en USUARIO. El
+  Administrador no se puede obtener por aqui:
+  es una de las dos barreras que hacen que el
+  registro sea privado.
+end note
+
+note over IS, DB
+  La validacion del codigo NO es un caso de uso
+  propio, es un paso interno de UC01: no tiene
+  actor ni objetivo independiente. Por eso en
+  los casos de uso aparece como precondicion y
+  no como «include».
+end note
+
+note over RC
+  COMO ESTA HOY: no implementado. El BackEnd solo
+  tiene /auth/login. Este diagrama especifica el
+  comportamiento que exigen los casos de uso.
+end note
+@enduml

@@ -1,0 +1,99 @@
+@startuml
+title Diagrama de clases 2 - Publicaciones y fotografias
+
+skinparam shadowing false
+hide circle
+
+class Usuario {
+  - id : UUID
+  - nombreUsuario : String
+  - activo : Boolean
+  - bloqueado : Boolean
+  --
+  + estaBloqueado() : Boolean
+}
+
+class Publicacion {
+  - id : UUID
+  - texto : String
+  - fechaCreacion : Date
+  - fechaEdicion : Date
+  --
+  + crear(autor : Usuario, texto : String) : Publicacion
+  + editar(autor : Usuario, texto : String) : boolean
+  + eliminar(autor : Usuario) : boolean
+  + adjuntarFotografia(foto : Fotografia) : boolean
+  + desvincularFotografia(foto : Fotografia) : boolean
+  + tieneContenido() : boolean
+  + esDe(autor : Usuario) : boolean
+}
+
+class Fotografia {
+  - id : UUID
+  - titulo : String
+  - descripcion : String
+  - url : String
+  - fechaSubida : Date
+  --
+  + subir(propietario : Usuario, url : String) : Fotografia
+  + eliminar(propietario : Usuario) : boolean
+  + vincularA(publicacion : Publicacion) : void
+  + desvincularDe(publicacion : Publicacion) : void
+  + asignarComoAvatar(usuario : Usuario) : void
+  + esDe(propietario : Usuario) : boolean
+}
+
+Usuario "1" -- "0..*" Publicacion : publica
+Usuario "1" -- "0..*" Fotografia : posee
+Publicacion "0..*" -- "0..*" Fotografia : adjunta
+
+note right of Usuario
+  Se repite aqui, y no se importa del Diagrama 1,
+  para que este diagrama se entienda solo. Es la
+  MISMA clase: en un diagrama unico con todas las
+  clases, apareceria una sola vez.
+end note
+
+note right of Publicacion
+  UC17 crear, UC19 editar, UC20 eliminar,
+  UC21 consultar, UC23 mis publicaciones y
+  UC46 publicaciones de otro usuario.
+
+  El metodo crear exige texto o al menos una
+  fotografia (UC17). Si no hay ninguno, no se
+  crea la publicacion: por eso tieneContenido.
+end note
+
+note bottom of Publicacion
+  "Solo el autor puede editar o eliminar" se
+  modela con esDe(autor) y no con un permiso
+  aparte: es la misma regla en UC19, UC20,
+  UC25 y UC26.
+end note
+
+note right of Fotografia
+  UC31 subir, UC32 galeria propia, UC33 consultar,
+  UC34 eliminar, UC35 desvincular y UC36 foto de
+  perfil.
+
+  url es lo unico que se guarda del archivo. El
+  binario no lo guarda el sistema, de ahi que
+  el almacen de archivos no sea un nodo del
+  despliegue.
+end note
+
+note bottom of Fotografia
+  La relacion con Publicacion es de muchos a
+  muchos y NO lleva clase de asociacion: el vinculo
+  no tiene datos propios, ni orden, ni fecha.
+  Una misma foto puede estar en varias
+  publicaciones y una publicacion puede llevar
+  varias fotos.
+end note
+
+note bottom of Publicacion
+  Al eliminar una publicacion, la foto NO se
+  borra: se queda en la galeria del propietario
+  (UC35). Solo desaparece el vinculo.
+end note
+@enduml

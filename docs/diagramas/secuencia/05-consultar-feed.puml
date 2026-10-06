@@ -1,0 +1,75 @@
+@startuml
+title Diagrama de secuencia 5 - Consultar el feed (UC22)
+
+skinparam shadowing false
+autonumber
+
+actor Usuario as U
+boundary "HomePage\n(FrontEnd)" as UI
+control "FeedController\n(BackEnd)" as FC
+control "FeedService\n(BackEnd)" as FS
+control "SeguimientoService\n(BackEnd)" as SS
+database "PostgreSQL" as DB
+
+activate UI
+U -> UI : entra en la aplicacion
+UI -> FC : GET /api/publicaciones/feed
+activate FC
+FC -> FS : listarFeed(usuario)
+activate FS
+
+FS -> SS : siguiendoDe(usuario)
+activate SS
+SS -> DB : ids de los usuarios a los que sigue
+activate DB
+DB --> SS : lista de ids
+deactivate DB
+SS --> FS : ids
+deactivate SS
+
+FS -> DB : publicaciones de esos ids\nmas las del propio usuario,\nordenadas por fecha desc
+activate DB
+DB --> FS : publicaciones
+deactivate DB
+
+FS --> FC : publicaciones
+deactivate FS
+FC --> UI : 200 lista de publicaciones
+deactivate FC
+
+loop por cada publicacion
+  UI -> UI : anade las reacciones y el numero\nde comentarios de cada una
+end
+
+UI --> U : muestra el feed
+deactivate UI
+
+note over FS, DB
+  El seguimiento es UNIDIRECCIONAL, al estilo
+  Twitter: el feed se monta con las cuentas que
+  el usuario sigue, no con las que le siguen.
+  Alguien puede publicar y no aparecer en el feed
+  de quien le sigue de vuelta.
+end note
+
+note over U, DB
+  La sesion activa es precondicion transversal
+  de todos los diagramas 2 a 6. En los casos de
+  uso no es un caso de uso, y aqui tampoco se
+  dibuja como mensaje: en cuanto exista el
+  middleware que valide el token, esta sera la
+  primera comprobacion del diagrama.
+end note
+
+note over FS
+  Lo que NO se hace, a proposito:
+  - No se avisa a los seguidores de cada
+    publicacion. Se enteran por el feed.
+  - No se pagina. Los casos de uso no lo dicen, y
+    anadirlo aqui seria decidir por el usuario.
+  - No se filtran publicaciones de cuentas
+    bloqueadas. La regla "bloqueado no ve
+    publicaciones" (UC44) no se ha concretado en
+    los casos de uso y hay que decidirla antes.
+end note
+@enduml

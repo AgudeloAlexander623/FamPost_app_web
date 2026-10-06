@@ -1,0 +1,130 @@
+@startuml
+title Diagrama de clases 1 - Identidad, roles y acceso
+
+skinparam shadowing false
+hide circle
+
+enum Rol {
+  USUARIO
+  ADMINISTRADOR
+}
+
+class Usuario {
+  - id : UUID
+  - nombreUsuario : String <<unico>>
+  - nombre : String
+  - apellidos : String
+  - email : String
+  - fechaAlta : Date
+  - activo : Boolean
+  - bloqueado : Boolean
+  - pendienteRestablecimiento : Boolean
+  - avatar : UUID
+  - rol : Rol
+  --
+  + editarPerfil(datos) : void
+  + esAdministrador() : Boolean
+  + desactivar() : void
+  + activar() : void
+  + bloquear() : void
+  + desbloquear() : void
+  + marcarPendienteRestablecimiento() : void
+  + resolverRestablecimiento() : void
+}
+
+class Seguimiento {
+  - fechaInicio : Date
+}
+
+class Invitacion {
+  - id : UUID
+  - codigo : String <<unico>>
+  - fechaEmision : Date
+  - fechaCaducidad : Date
+  - usada : Boolean
+  --
+  + estaCaducada() : Boolean
+  + puedeUsarse() : Boolean
+  + marcarUsada() : void
+}
+
+class Sesion {
+  - id : UUID
+  - fechaEmision : Date
+  - fechaExpiracion : Date
+  - direccionIp : String
+  - dispositivo : String
+  - activa : Boolean
+  --
+  + haExpirado() : Boolean
+  + cerrar() : void
+}
+
+Usuario "0..*" -- "0..*" Usuario : sigue a
+Seguimiento .. Usuario : registra el vinculo
+Seguimiento .. Usuario : registra el vinculo
+
+Usuario "1" -- "0..*" Sesion : tiene
+Usuario "1" -- "0..*" Invitacion : emite
+Invitacion "0..1" --> "0..1" Usuario : usada por
+
+note right of Usuario
+  Los tres indicadores (activo, bloqueado y
+  pendienteRestablecimiento) son independientes
+  a proposito, NO un unico atributo "estado".
+
+  UC43 desactivar impide iniciar sesion.
+  UC44 bloquear impide ver y comentar, pero no
+  impide iniciar sesion.
+
+  Un usuario puede estar bloqueado y desactivado
+  a la vez; con un solo enum se perderia esa
+  combinacion.
+end note
+
+note bottom of Usuario
+  avatar guarda el id de la Fotografia que hace
+  de foto de perfil (UC36, Diagrama de clases 2).
+  Se referencia por id y no por objeto para no
+  arrastrar la imagen al leer el perfil.
+
+  Este diagrama es autocontenido. Las clases
+  Publicacion, Fotografia, Comentario, Reaccion y
+  Notificacion aparecen en los diagramas 2, 3 y 4
+  con sus vinculos a Usuario.
+end note
+
+note bottom of Seguimiento
+  Clase de asociacion del vinculo "sigue a", no
+  una entidad con vida propia: no tiene id y
+  nace y muere con el vinculo.
+
+  Existe porque el vinculo lleva fechaInicio y
+  porque "Dejar de seguir" (UC14) tiene que
+  poder localizar el vinculo concreto.
+end note
+
+note bottom of Invitacion
+  UC47. El codigo es la unica via de alta del
+  sistema: sin el, el registro (UC01) se rechaza.
+  Se caduca si no se usa y el Administrador lo
+  comunica por un canal externo.
+end note
+
+note bottom of Sesion
+  UC04 (consultar sesiones) y UC05 (cerrar
+  todas). Es el unico dato que el usuario ve
+  sobre su autenticacion, por eso si se modela.
+  El token en si no se guarda: solo su
+  identificador y las fechas.
+end note
+
+note as NEXCL
+  |Excluido a proposito|
+  --
+  Credencial y hash de contrasena: pertenecen al
+  servicio de autenticacion, que en los casos de
+  uso es un actor externo (Diagrama 1). Aqui no
+  se modela lo que ya es interno de ese servicio.
+end note
+@enduml
