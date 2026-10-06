@@ -140,3 +140,7 @@ la tabla de "Estado del proyecto" del README y `docs/secuencia.md`, que marca qu
 existe en código y cuál solo está especificado. Pendientes conocidos: validación del
 JWT en `BackEnd`, registro por invitación, posts/comentarios/reacciones, modelo
 entidad-relación.
+
+## Memoria
+
+siempre actualiza /MEMORY.md
